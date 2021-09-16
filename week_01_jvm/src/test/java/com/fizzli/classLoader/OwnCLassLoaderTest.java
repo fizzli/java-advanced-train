@@ -10,12 +10,14 @@ public class OwnCLassLoaderTest {
     public static void main(String[] args) throws ClassNotFoundException {
         OwnClassLoader loader = new OwnClassLoader();
         Class<?> hello = loader.loadClass("Hello");
+        if (hello == null){
+            System.out.println("类为空");
+            return;
+        }
         try {
             Object obj = hello.getDeclaredConstructor().newInstance();
             Method helloMethod = obj.getClass().getDeclaredMethod("hello");
             helloMethod.invoke(obj);
-
-
         }catch (NoSuchMethodException | InvocationTargetException |
                 InstantiationException | IllegalAccessException e){
             e.printStackTrace();

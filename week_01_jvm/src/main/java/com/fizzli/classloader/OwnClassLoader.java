@@ -24,34 +24,27 @@ public class OwnClassLoader extends ClassLoader{
         //获取带扩展名的文件名
         String fileName = getFileName(name);
         //获取文件转成输入流
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName);
+        InputStream input = this.getClass().getClassLoader().getResourceAsStream(fileName);
+        if (input == null){
+            return null;
+        }
         //ClassPathResource pathResource = new ClassPathResource(fileName);
         //InputStream is = pathResource.getInputStream();
 
-        //新建输出流
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-        int len;
         Class<?> clazz = null;
         try{
-            if (is != null){
-                while((len = is.read()) != -1){
-                    bos.write(len);
-                }
-            }
+            int available = input.available();
+            byte[] data = new byte[available];
+            input.read(data);
             //获取解密后字节流
-            byte[] data =decrypt(bos.toByteArray());
+            byte[] decryptData =decrypt(data);
             //将数组转化为类
-            clazz  = defineClass(name,data,0,data.length);
-
+            clazz  = defineClass(name,decryptData,0,decryptData.length);
         }catch (IOException e){
             e.printStackTrace();
         }finally {
             try {
-                if (is != null){
-                    is.close();
-                }
-                bos.close();
+                input.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
