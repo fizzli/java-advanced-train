@@ -1,5 +1,9 @@
 package com.fizzli.classloader;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * @author fizzli
  * @version 1.0.0
@@ -10,4 +14,79 @@ package com.fizzli.classloader;
 public class OwnClassLoader extends ClassLoader{
 
 
+    /**
+     * 重写findClass方法，用于自己的逻辑
+     * @param name 文件名
+     * @return 类
+     */
+    @Override
+    public Class<?> findClass(String name) {
+        //获取带扩展名的文件名
+        String fileName = getFileName(name);
+        //获取文件转成输入流
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName);
+        //ClassPathResource pathResource = new ClassPathResource(fileName);
+        //InputStream is = pathResource.getInputStream();
+
+        //新建输出流
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+        int len;
+        Class<?> clazz = null;
+        try{
+            if (is != null){
+                while((len = is.read()) != -1){
+                    bos.write(len);
+                }
+            }
+            //获取解密后字节流
+            byte[] data =decrypt(bos.toByteArray());
+            //将数组转化为类
+            clazz  = defineClass(name,data,0,data.length);
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }finally {
+            try {
+                if (is != null){
+                    is.close();
+                }
+                bos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return clazz;
+    }
+
+    /**
+     * 解密
+     * @param data 密文数组
+     * @return 解密后数组
+     */
+    private byte[] decrypt(byte[] data) {
+        byte[] newData = new byte[data.length];
+
+        for (int i=0;i<data.length;i++){
+            newData[i] = (byte) (255 - data[i]);
+        }
+
+        return newData;
+    }
+
+    /**
+     * 获取class文件名
+     * @param name 不带扩展名的文件名
+     * @return 带扩展名的文件名
+     */
+    private String getFileName(String name) {
+
+        int index = name.lastIndexOf(".");
+        if (index == -1){
+            return name + ".xlass";
+        }else{
+            return name.substring(index + 1) + ".xlass";
+        }
+    }
 }
